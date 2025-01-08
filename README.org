@@ -1,0 +1,63 @@
+* goshenv
+
+** Gauche Scheme Version Management Tool
+
+goshenv provides a way to install and manage multiple versions of
+Gauche. It installs Gauche under ~/.goshenv/gauche directory. By
+making links to Gsuche binaries of the version users want to use,
+versions are switched. goshenv is written in bash, and uses
+get-gauche.sh script to install Gauche.
+
+
+** Installation
+
+prepare-goshenv.sh script creates ~/.goshenv and installs the latest
+version of Gauche under ~/.goshenv/gauche directory. It also adds PATH
+environment variable setting for links under ~/.goshenv/shims to
+~/.bashrc file.
+
+'goshenv init' executed with the location of goshenv-init.tgz
+make goshenv management commands available.
+
+#+BEGIN_SRC bash
+# generates prepare-goshenv.sh & goshenv-init.tgz
+make
+
+# installs the latest Gauche
+bash ./release/prepare-goshenv.sh
+
+# update PATH variable
+source ~/.bashrc
+
+# makes goshenv management commands available
+goshenv init ./release/goshenv-init.tgz
+#+END_SRC
+
+
+** Usage
+
+#+BEGIN_EXAMPLE
+installed        : list installed versions
+installable      : list installable versions (snapshot/release)
+installable-edge : list installable edge versions
+install <version> <configure-args>
+                 : install <version>
+switch <version> : switch to use <version>
+remove <version> : remove <version>
+update-db        : update db info (installable version list)
+#+END_EXAMPLE
+
+
+** Uninstall
+
+goshenv works only in user's home directory. To completely remove
+goshenv and installed Gauche, 'rm -R -f ~/.goshenv' works. Also remove
+lines related to PATH environment variable setting to Gauche links in
+~/.bashrc file.
+
+
+** Contact
+
+Your feedback is welcome.
+
+Maintainer: Toshihiro (Toshi) Umehara [toshi@niceume.com]

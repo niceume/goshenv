@@ -1,0 +1,52 @@
+#!/bin/env bash
+# -*- mode: sh;-*-
+
+GOSHENV_HOME=$HOME/.goshenv/
+GAUCHE_API="https://practical-scheme.net/gauche/releases"
+
+case $1 in
+    init)
+        mkdir -p $GOSHENV_HOME/temp
+        if [[ $2 = "" ]] ; then
+            echo "'goshenv init' needs to specify goshenv-init.tgz"
+            exit 1
+        fi
+
+        if [[ $2 =~ ^http ]] ; then
+            file_uri=$2
+            if curl -L -f $file_uri -o $GOSHENV_HOME/temp/goshenv-init.tgz \
+                    > /dev/null 2>&1 ; then
+                : # download success
+            else
+                echo "download failure ($2)"
+            fi
+        else
+            file_path=$2
+            if [[ -f $file_path ]] ; then
+                cp $file_path $GOSHENV_HOME/temp/goshenv-init.tgz
+                # file identified
+            else
+                echo "specified file ($2) not found"
+                exit 1
+            fi
+        fi
+
+        if tar -zxf $GOSHENV_HOME/temp/goshenv-init.tgz \
+               --strip-components 1 -C $GOSHENV_HOME/script/sub/ ; then
+            echo "goshenv is ready to use"
+            echo "'goshenv help' shows how to use"
+        fi
+        rm -R -f $GOSHENV_HOME/temp/*
+        ;;
+    *)
+        if [[ -f $GOSHENV_HOME/script/sub/goshenv_main.sh ]] ; then
+            source $GOSHENV_HOME/script/sub/goshenv_main.sh
+        else
+            echo "'goshenv init <uri or path to goshenv-init.tgz>"
+            echo "is required to run before starting to use goshenv command."
+            echo "If you don't know where the goshenv-init.tgz is,"
+            echo "please refer to README."
+            exit 1
+        fi
+        ;;
+esac

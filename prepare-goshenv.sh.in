@@ -1,0 +1,136 @@
+#!/bin/env bash
+# -*- mode: sh;-*-
+
+echo "prepare-goshenv.sh is executed"
+
+# Setting
+
+GET_GAUCHE_URI=https://raw.githubusercontent.com/practical-scheme/get-gauche/refs/heads/master/get-gauche.sh
+GAUCHE_API=https://practical-scheme.net/gauche/releases
+GOSHENV_HOME="$HOME/.goshenv"
+
+##### Start: File Insertion #####
+@GOSHENV_UTILITY@
+##### END  : File Insertion #####
+
+
+# Command check
+
+ensure_command curl
+ensure_command cmake
+ensure_command2 makeinfo \
+               "Error: makeinfo is not found. It may be included in texinfo package."
+if ! echo $(uname) | grep -i "bsd" ; then
+    ensure_command gmake
+fi
+
+
+# .goshenv directory
+
+create_dir_unless_exits "$GOSHENV_HOME"
+
+
+# direcotries under .goshenv
+
+mkdir -p "$GOSHENV_HOME/temp"
+mkdir -p "$GOSHENV_HOME/gauche"
+mkdir -p "$GOSHENV_HOME/script/sub"
+mkdir -p "$GOSHENV_HOME/shims"
+mkdir -p "$GOSHENV_HOME/db"
+
+
+# download get-gauche.sh script
+
+if ! curl -L -f --progress-bar -o "$GOSHENV_HOME/temp/get-gauche.sh" $GET_GAUCHE_URI; then
+    echo "get-gauche.sh download failed"
+    if [[ -f "$GOSHENV_HOME/temp/get-gauche.sh" ]]; then
+        rm -f "$GOSHENV_HOME/temp/get-gauche.sh"
+    fi
+    exit 1
+else
+    chmod 755 "$GOSHENV_HOME/temp/get-gauche.sh"
+fi
+
+
+# cd temp
+
+cd "$GOSHENV_HOME/temp"
+
+
+# clean up temp directory when exit
+
+function trap_exit {
+    echo "exit goshenv installation process"
+    if ! [[ "$GOSHENV_HOME" == "" ]] ; then
+        rm -R -f "$GOSHENV_HOME/temp/*"
+    fi
+    echo "clean up .goshenv/temp directory"
+}
+trap trap_exit EXIT
+
+
+# get-gauche.sh latest version
+
+GAUCHE_LATEST_VERSION=`curl -f -L $GAUCHE_API/latest.txt 2>/dev/null`
+
+curl -f -L $GAUCHE_API/.txt 2>/dev/null \
+    | goshenv_filter_non_edge_versions > "$GOSHENV_HOME/db/installable.txt" 
+
+mkdir -p "$GOSHENV_HOME/gauche/$GAUCHE_LATEST_VERSION"
+
+./get-gauche.sh --prefix "$GOSHENV_HOME/gauche/$GAUCHE_LATEST_VERSION" \
+                --version $GAUCHE_LATEST_VERSION \
+                --configure-args "--with-tls=mbedtls-internal" \
+                --force \
+                --auto
+
+if ! [[ -f "$GOSHENV_HOME/gauche/$GAUCHE_LATEST_VERSION/bin/gosh" ]] ; then
+    # When installation failed
+    rm -f "$GOSHENV_HOME/db/installable.txt"
+    exit 1
+else
+    echo $GAUCHE_LATEST_VERSION > "$GOSHENV_HOME/db/current_use.txt"
+    mv ./get-gauche.sh "$GOSHENV_HOME/script/sub/"
+fi
+
+# make links under shims
+
+mkdir -p $GOSHENV_HOME/shims/bin
+mkdir -p $GOSHENV_HOME/shims/share/info
+
+cd $GOSHENV_HOME/shims/bin
+goshenv_make_shims_from $GOSHENV_HOME/gauche/$GAUCHE_LATEST_VERSION/bin
+cd $GOSHENV_HOME
+
+cd $GOSHENV_HOME/shims/share/info
+goshenv_make_shims_from $GOSHENV_HOME/gauche/$GAUCHE_LATEST_VERSION/bin
+cd $GOSHENV_HOME
+
+# modify .bashrc
+
+if ! cat "$HOME/.bashrc" | grep -v "^#" | grep "PATH" |
+        grep ".goshenv/shims/bin" > /dev/null 2>&1; then 
+    # add setting to .bashrc
+    echo "" >> "$HOME/.bashrc"
+    echo "# goshenv setting #" >> "$HOME/.bashrc"
+    echo "PATH=$HOME/.goshenv/shims/bin:$HOME/.goshenv/script:\$PATH" \
+         >> "$HOME/.bashrc"
+fi
+
+# generates goshenv file
+
+cat <<"EOF" > $GOSHENV_HOME/script/goshenv
+@GOSHENV_CONTENT@
+EOF
+
+# Finish
+
+if chmod 755 $GOSHENV_HOME/script/goshenv ; then
+    echo "goshenv installation finished"
+    echo "----------------------------------------------------------"
+    echo "'goshenv init <uri or path to goshenv-init.tgz>"
+    echo "is required to run before starting to use goshenv command."
+    echo "If you don't know where the goshenv-init.tgz is,"
+    echo "please refer to README."
+    echo "----------------------------------------------------------"
+fi
