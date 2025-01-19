@@ -13,7 +13,7 @@ echo "prepare-goshenv.sh is executed"
 non_option_args=()
 while ! [[ $OPTIND -gt $# ]]; do
     optstring=":v:s:t:-:"
-    long_options=(version: with-slib: with-tls: )
+    long_options=(version: with-slib: with-tls: skip-tests allow-skip-info)
     while getopts $optstring  option; do
 
         # START logic to deal with long options
@@ -74,11 +74,18 @@ while ! [[ $OPTIND -gt $# ]]; do
                     exit 1
                 fi
                 ;;
+            skip-tests)
+                SKIP_TESTS="YES"
+                ;;
+            allow-skip-info)
+                ALLOW_SKIP_INFO="YES"
+                ;;
             \?)
                 echo "unknown option ${option} ${OPTARG}"
                 non_option_args+=('?')
                 ;;
             *)
+                echo "option: ${option} optarg: ${OPTARG} optind: ${OPTIND}"
                 echo "unintentional parse error"
                 exit 1
                 ;;
@@ -136,10 +143,13 @@ if ! echo $(uname) | grep -i "bsd" ; then
     ensure_command gmake
 fi
 
-if ! hash makeinfo; then
-    echo "Note: makeinfo is not found. It may be included in texinfo package."
-    echo "Without makeinfo, info files are not created. Do you want to proceed?"
-    ask_proceed_or_exit
+if ! [[ $ALLOW_SKIP_INFO = "YES" ]]; then
+    if ! hash makeinfo; then
+        echo "Note: makeinfo is not found. It may be included in texinfo package."
+        echo "Without makeinfo, info files cannot be created."
+        echo "Run this script with --allow-skip-info or install makeinfo"
+        exit 1
+    fi
 fi
 
 if [[ $WITH_TLS = "mbedtls-internal" ]] ; then
@@ -220,14 +230,25 @@ if [[ -v WITH_TLS ]] && ! [[ $WITH_TLS = "" ]]; then
     GAUCHE_CONFIGURE_ARGS="$GAUCHE_CONFIGURE_ARGS --with-tls=${WITH_TLS}"
 fi
 
+GET_GAUCHE_ADDITIONAL_OPTIONS=""
+if [[ $SKIP_TESTS = "YES" ]]; then
+    GET_GAUCHE_ADDITIONAL_OPTIONS="$GET_GAUCHE_ADDITIONAL_OPTIONS --skip-tests"
+fi
+
 curl -f -L $GAUCHE_API/.txt 2>/dev/null \
     | goshenv_filter_non_edge_versions > "$GOSHENV_HOME/db/installable.txt" 
 
 # get-gauche.sh
 
 echo "Gauche is to be installed with the following settings"
-echo "--version $GAUCHE_VERSION"
-echo "--configure-args $GAUCHE_CONFIGURE_ARGS"
+echo "version: $GAUCHE_VERSION"
+echo "configure-args: $GAUCHE_CONFIGURE_ARGS"
+if [[ $SKIP_TESTS = "YES" ]]; then
+    echo "tests: skipped"
+fi
+if [[ $ALLLOW_SKIP_INFO = "YES" ]] && ! hash makeinfo; then
+    echo "info files: not generated"
+fi
 ask_proceed_or_exit
 
 mkdir -p "$GOSHENV_HOME/gauche/$GAUCHE_VERSION"
@@ -235,7 +256,8 @@ mkdir -p "$GOSHENV_HOME/gauche/$GAUCHE_VERSION"
                 --version $GAUCHE_VERSION \
                 --configure-args "$GAUCHE_CONFIGURE_ARGS" \
                 --force \
-                --auto
+                --auto \
+                $GET_GAUCHE_ADDITIONAL_OPTIONS
 
 if ! [[ -f "$GOSHENV_HOME/gauche/$GAUCHE_VERSION/bin/gosh" ]] ; then
     # When installation failed
