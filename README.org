@@ -14,7 +14,16 @@ get-gauche.sh script to install Gauche.
 prepare-goshenv.sh script creates ~/.goshenv and installs the latest
 version of Gauche under ~/.goshenv/gauche directory. It also adds PATH
 environment variable setting for links under ~/.goshenv/shims to
-~/.bashrc file.
+~/.bashrc file. This script accepts the following options.
+
+- --version
+  - default: latest
+  - available versions are listed at [[https://practical-scheme.net/gauche/releases/][Gauche Releases]]
+- --with-tls
+  - default: mbedtls-internal
+  - none/mebedtls/mbedtls-internal
+- --with-slib
+  - specifies a path to slib home directory
 
 'goshenv init' executed with the location of goshenv-init.tgz
 make goshenv management commands available.
@@ -25,6 +34,9 @@ make
 
 # installs the latest Gauche
 bash ./release/prepare-goshenv.sh
+# prepare-goshenv.sh can optionally specify version and configure arguments
+# The above code is equivalent to the following
+# bash ./release/prepare-goshenv.sh --version latest --with-tls mbedtls-internal
 
 # update PATH variable
 source ~/.bashrc

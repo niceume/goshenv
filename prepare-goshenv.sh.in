@@ -3,6 +3,121 @@
 
 echo "prepare-goshenv.sh is executed"
 
+# Arguments
+
+# (e.g.)
+# --version 0.9.15
+# --with-slib ~/lib/slib
+# --with-tls mbedtls-internal
+
+non_option_args=()
+while ! [[ $OPTIND -gt $# ]]; do
+    optstring=":v:s:t:-:"
+    long_options=(version: with-slib: with-tls: )
+    while getopts $optstring  option; do
+
+        # START logic to deal with long options
+        if [[ $option = "-" ]]; then
+            if [[ $OPTARG =~ ^[0-9a-zA-Z][0-9a-zA-Z_-]*= ]]; then
+                option=${OPTARG%%=*}
+                OPTARG=${OPTARG#*=}
+            elif [[ $OPTARG =~ ^[0-9a-zA-Z][0-9a-zA-Z_-]* ]]; then
+                option="${OPTARG}"
+                if [[ " ${long_options[*]%:} " =~ " ${option} " ]] ; then
+                    if [[ " ${long_options[*]} " =~ " ${option}: " ]] ; then
+                        if ! [[ ${!OPTIND} =~ ^-.+ ]]; then
+                            OPTARG=${!OPTIND}
+                            OPTIND=$(( OPTIND + 1))
+                        else
+                            OPTARG=${!OPTIND}
+                            OPTIND=$(( OPTIND + 1))
+                        fi
+                    else
+                        OPTARG=""
+                    fi
+                else
+                    if [[ ${optstring:0:1} = : ]] ; then
+                        OPTARG=$option
+                        option="?"
+                    else
+                        echo "$0: illegal option -- $option" 1>&2
+                        option="?"
+                        unset OPTARG
+                    fi
+                fi
+            fi
+        fi
+        # END logic to deal with long options
+
+        case $option in
+            v|version)
+                if ! [[ ${OPTARG} = "" ]] ; then
+                    GAUCHE_VERSION=$OPTARG
+                else
+                    echo "-v|--version option requires value"
+                    exit 1
+                fi
+                ;;
+            s|with-slib)
+                if ! [[ ${OPTARG} = "" ]] ; then
+                    WITH_SLIB=$OPTARG
+                else
+                    echo "-s|--with-slib option requires value"
+                    exit 1
+                fi
+                ;;
+            t|with-tls)
+                if ! [[ ${OPTARG} = "" ]] ; then
+                    WITH_TLS=$OPTARG
+                else
+                    echo "-t|--with-tls option requires value"
+                    exit 1
+                fi
+                ;;
+            \?)
+                echo "unknown option ${option} ${OPTARG}"
+                non_option_args+=('?')
+                ;;
+            *)
+                echo "unintentional parse error"
+                exit 1
+                ;;
+        esac
+    done
+
+    # When non-option argument is encountered
+    non_option_args+=(${!OPTIND})
+    OPTIND=$((OPTIND + 1))
+done
+
+if ! [[ -z ${non_option_args[*]} ]]; then
+    echo "non used arguments found: ${non_option_args[*]}"
+    echo "please check arguments and try installation again"
+    exit 1
+fi
+
+## Variables specified as command arguments
+
+if [[ -v GAUCHE_VERSION ]] ; then
+    echo "GAUCHE_VERSION: $GAUCHE_VERSION"
+fi
+if [[ -v WITH_SLIB ]] ; then
+    echo "WITH_SLIB: $WITH_SLIB"
+fi
+if [[ -v WITH_TLS ]] ; then
+    echo "WITH_TLS: $WITH_TLS"
+fi
+
+## Default Values for variables
+
+if ! [[ -v GAUCHE_VERSION ]] || [[ $GAUCHE_VERSION = "" ]] ; then
+    GAUCHE_VERSION="latest"
+fi
+
+if ! [[ -v WITH_TLS ]] || [[ $WITH_TLS = "" ]] ; then
+    WITH_TLS="mbedtls-internal"
+fi
+
 # Setting
 
 GET_GAUCHE_URI=https://raw.githubusercontent.com/practical-scheme/get-gauche/refs/heads/master/get-gauche.sh
@@ -17,17 +132,35 @@ GOSHENV_HOME="$HOME/.goshenv"
 # Command check
 
 ensure_command curl
-ensure_command cmake
-ensure_command2 makeinfo \
-               "Error: makeinfo is not found. It may be included in texinfo package."
 if ! echo $(uname) | grep -i "bsd" ; then
     ensure_command gmake
 fi
 
+if ! hash makeinfo; then
+    echo "Note: makeinfo is not found. It may be included in texinfo package."
+    echo "Without makeinfo, info files are not created. Do you want to proceed?"
+    ask_proceed_or_exit
+fi
+
+if [[ $WITH_TLS = "mbedtls-internal" ]] ; then
+    if ! hash cmake; then
+        echo "Note: cmake is not found"
+        echo "When '--with-tls=mbedtls-internal' is specified as a configure argument"
+        echo "cmake is usually required to compile."
+        echo "Do you want to proceed?"
+        ask_proceed_or_exit
+    fi
+fi
 
 # .goshenv directory
 
 create_dir_unless_exits "$GOSHENV_HOME"
+
+if [[ -f $GOSHENV_HOME/shims/bin/gosh ]] ; then
+    echo "goshenv seems to be already installed"
+    echo "If you need to reinstall goshenv, please remove ~/.goshenv directory first"
+    exit 1
+fi
 
 
 # direcotries under .goshenv
@@ -69,27 +202,47 @@ function trap_exit {
 trap trap_exit EXIT
 
 
-# get-gauche.sh latest version
+# get-gauche.sh setting
 
-GAUCHE_LATEST_VERSION=`curl -f -L $GAUCHE_API/latest.txt 2>/dev/null`
+if [[ $GAUCHE_VERSION = "latest" ]] ; then
+    GAUCHE_VERSION=`curl -f -L $GAUCHE_API/latest.txt 2>/dev/null`
+elif [[ $GAUCHE_VERSION = "snapshot" ]] ; then
+    GAUCHE_VERSION=`curl -f -L $GAUCHE_API/snapshot.txt 2>/dev/null`
+elif [[ $GAUCHE_VERSION = "bleeding" ]] ; then
+    GAUCHE_VERSION=`curl -f -L $GAUCHE_API/bleeding.txt 2>/dev/null`
+fi
+
+GAUCHE_CONFIGURE_ARGS=""
+if [[ -v WITH_SLIB ]] && ! [[ $WITH_SLIB = "" ]]; then
+    GAUCHE_CONFIGURE_ARGS="$GAUCHE_CONFIGURE_ARGS --with-slib=${WITH_SLIB}"
+fi
+if [[ -v WITH_TLS ]] && ! [[ $WITH_TLS = "" ]]; then
+    GAUCHE_CONFIGURE_ARGS="$GAUCHE_CONFIGURE_ARGS --with-tls=${WITH_TLS}"
+fi
 
 curl -f -L $GAUCHE_API/.txt 2>/dev/null \
     | goshenv_filter_non_edge_versions > "$GOSHENV_HOME/db/installable.txt" 
 
-mkdir -p "$GOSHENV_HOME/gauche/$GAUCHE_LATEST_VERSION"
+# get-gauche.sh
 
-./get-gauche.sh --prefix "$GOSHENV_HOME/gauche/$GAUCHE_LATEST_VERSION" \
-                --version $GAUCHE_LATEST_VERSION \
-                --configure-args "--with-tls=mbedtls-internal" \
+echo "Gauche is to be installed with the following settings"
+echo "--version $GAUCHE_VERSION"
+echo "--configure-args $GAUCHE_CONFIGURE_ARGS"
+ask_proceed_or_exit
+
+mkdir -p "$GOSHENV_HOME/gauche/$GAUCHE_VERSION"
+./get-gauche.sh --prefix "$GOSHENV_HOME/gauche/$GAUCHE_VERSION" \
+                --version $GAUCHE_VERSION \
+                --configure-args "$GAUCHE_CONFIGURE_ARGS" \
                 --force \
                 --auto
 
-if ! [[ -f "$GOSHENV_HOME/gauche/$GAUCHE_LATEST_VERSION/bin/gosh" ]] ; then
+if ! [[ -f "$GOSHENV_HOME/gauche/$GAUCHE_VERSION/bin/gosh" ]] ; then
     # When installation failed
     rm -f "$GOSHENV_HOME/db/installable.txt"
     exit 1
 else
-    echo $GAUCHE_LATEST_VERSION > "$GOSHENV_HOME/db/current_use.txt"
+    echo $GAUCHE_VERSION > "$GOSHENV_HOME/db/current_use.txt"
     mv ./get-gauche.sh "$GOSHENV_HOME/script/sub/"
 fi
 
@@ -99,11 +252,11 @@ mkdir -p $GOSHENV_HOME/shims/bin
 mkdir -p $GOSHENV_HOME/shims/share/info
 
 cd $GOSHENV_HOME/shims/bin
-goshenv_make_shims_from $GOSHENV_HOME/gauche/$GAUCHE_LATEST_VERSION/bin
+goshenv_make_shims_from $GOSHENV_HOME/gauche/$GAUCHE_VERSION/bin
 cd $GOSHENV_HOME
 
 cd $GOSHENV_HOME/shims/share/info
-goshenv_make_shims_from $GOSHENV_HOME/gauche/$GAUCHE_LATEST_VERSION/bin
+goshenv_make_shims_from $GOSHENV_HOME/gauche/$GAUCHE_VERSION/share/info
 cd $GOSHENV_HOME
 
 # modify .bashrc

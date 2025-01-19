@@ -26,6 +26,15 @@ function ensure_variable2 {
     fi
 }
 
+function ask_proceed_or_exit {
+    select yn in "Proceed" "Exit"; do
+        case $yn in
+            Proceed ) break;;
+            Exit ) exit;;
+        esac
+    done
+}
+
 function create_dir_unless_exits {
     if [[ -d $1 ]] ; then
         : # nop
