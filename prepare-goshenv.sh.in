@@ -121,6 +121,10 @@ if ! [[ -v GAUCHE_VERSION ]] || [[ $GAUCHE_VERSION = "" ]] ; then
     GAUCHE_VERSION="latest"
 fi
 
+if ! [[ -v WITH_SLIB ]] || [[ $WITH_SLIB = "" ]] ; then
+    WITH_SLIB="latest"
+fi
+
 if ! [[ -v WITH_TLS ]] || [[ $WITH_TLS = "" ]] ; then
     WITH_TLS="mbedtls-internal"
 fi
@@ -141,6 +145,12 @@ GOSHENV_HOME="$HOME/.goshenv"
 ensure_command curl
 if ! echo $(uname) | grep -i "bsd" ; then
     ensure_command gmake
+fi
+
+if hash gmake; then
+    MAKE=gmake
+else
+    MAKE=make
 fi
 
 if ! [[ $ALLOW_SKIP_INFO = "YES" ]]; then
@@ -177,13 +187,51 @@ fi
 
 mkdir -p "$GOSHENV_HOME/temp"
 mkdir -p "$GOSHENV_HOME/gauche"
+mkdir -p "$GOSHENV_HOME/slib"
 mkdir -p "$GOSHENV_HOME/script/sub"
 mkdir -p "$GOSHENV_HOME/shims"
 mkdir -p "$GOSHENV_HOME/db"
 
 
+# download slib if required
+
+if [[ $WITH_SLIB = "none" ]] ; then
+    echo "slib installation is skipped"
+else
+    if [[ $WITH_SLIB = "latest" ]] ; then
+        WITH_SLIB=$(get_slib_latest)
+    fi
+    if [[ "$WITH_SLIB" =~ ^/ ]] ; then
+        if [[ -d "$WITH_SLIB" ]] && [[ -f "$WITH_SLIB/require.scm" ]] ; then
+            echo "slib path found: $WITH_SLIB"
+        else
+            echo "slib path not found: $WITH_SLIB"
+            exit 1
+        fi
+    elif ! [[ $(get_slib_uri $WITH_SLIB) == "" ]] ; then
+        SLIB_VERSION=$WITH_SLIB
+        if [[ -f "$GOSHENV_HOME/slib/$SLIB_VERSION/lib/slib/require.scm" ]] ; then
+            echo "slib $SLIB_VERSION found"
+        else
+            SLIB_URI=$(get_slib_uri $SLIB_VERSION)
+            echo "download slib $SLIB_VERSION"
+            if ! curl -f -L --progress-bar \
+                 -o "$GOSHENV_HOME/temp/slib-${SLIB_VERSION}.tar.gz" $SLIB_URI ; then
+                echo "slib download failed"
+                exit 1
+            fi
+        fi
+        WITH_SLIB="$GOSHENV_HOME/slib/$SLIB_VERSION/lib/slib/"
+    else
+        echo "unknown slib or relative path is specified: $WITH_SLIB"
+        exit 1
+    fi
+fi
+
+
 # download get-gauche.sh script
 
+echo "download get-gauche.sh"
 if ! curl -L -f --progress-bar -o "$GOSHENV_HOME/temp/get-gauche.sh" $GET_GAUCHE_URI; then
     echo "get-gauche.sh download failed"
     if [[ -f "$GOSHENV_HOME/temp/get-gauche.sh" ]]; then
@@ -238,8 +286,9 @@ fi
 curl -f -L $GAUCHE_API/.txt 2>/dev/null \
     | goshenv_filter_non_edge_versions > "$GOSHENV_HOME/db/installable.txt" 
 
-# get-gauche.sh
+# Confirm installation
 
+echo "-----------------------------------------------------"
 echo "Gauche is to be installed with the following settings"
 echo "version: $GAUCHE_VERSION"
 echo "configure-args: $GAUCHE_CONFIGURE_ARGS"
@@ -249,7 +298,30 @@ fi
 if [[ $ALLLOW_SKIP_INFO = "YES" ]] && ! hash makeinfo; then
     echo "info files: not generated"
 fi
+echo "-----------------------------------------------------"
 ask_proceed_or_exit
+
+
+# install slib if required
+
+if [[ -v SLIB_VERSION ]] ; then
+    if [[ -f "$GOSHENV_HOME/slib/$SLIB_VERSION/lib/slib/require.scm" ]] ; then
+        echo "slib $SLIB_VERSION is found"
+    else
+        mkdir "$GOSHENV_HOME/temp/slib"
+        tar zxf "$GOSHENV_HOME/temp/slib-${SLIB_VERSION}.tar.gz" \
+            -C "$GOSHENV_HOME/temp/slib" --strip-components=1
+        current_dir=$(pwd)
+        cd "$GOSHENV_HOME/temp/slib"
+        mkdir -p "$GOSHENV_HOME/slib/$SLIB_VERSION"
+        ./configure --prefix="$GOSHENV_HOME/slib/$SLIB_VERSION"
+        $MAKE infoz
+        $MAKE install
+        cd "$current_dir"
+    fi
+fi
+
+# get-gauche.sh
 
 mkdir -p "$GOSHENV_HOME/gauche/$GAUCHE_VERSION"
 ./get-gauche.sh --prefix "$GOSHENV_HOME/gauche/$GAUCHE_VERSION" \

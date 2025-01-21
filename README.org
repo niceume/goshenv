@@ -24,7 +24,13 @@ options.
   - default: mbedtls-internal
   - none/mebedtls/mbedtls-internal
 - --with-slib
-  - specifies a path to slib home directory
+  - default: latest
+  - none, latest, slib version or an absolute path to slib directory
+    - none skips slib installation
+    - latest installs the latest version of slib
+    - slib version can also be specified
+      - latest version and available slib versions are hardcoded.
+    - path should be specified by an absolute path beginning with /
 - --skip-tests
   - skip tests when installing Gauche
 - --allow-skip-info
@@ -41,7 +47,7 @@ make
 bash ./release/prepare-goshenv.sh
 # prepare-goshenv.sh can optionally specify version and configure arguments
 # The above code is equivalent to the following
-# bash ./release/prepare-goshenv.sh --version latest --with-tls mbedtls-internal
+# bash ./release/prepare-goshenv.sh --version latest --with-tls mbedtls-internal --with-slib latest
 
 # update PATH variable
 source ~/.bashrc

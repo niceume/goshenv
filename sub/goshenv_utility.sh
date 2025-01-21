@@ -59,3 +59,30 @@ function goshenv_filter_edge_versions {
 function goshenv_filter_non_edge_versions {
     egrep -v [p0-9.\-]+\\+[0-9]+
 }
+
+function get_slib_latest {
+    echo "3c1"
+}
+
+function get_slib_uri {
+    case $1 in
+        3c1)
+            echo "https://groups.csail.mit.edu/mac/ftpdir/scm/slib-3c1.tar.gz"
+            ;;
+        3b7)
+            echo "https://groups.csail.mit.edu/mac/ftpdir/scm/slib-3b7.tar.gz"
+            ;;
+        3b6)
+            echo "https://groups.csail.mit.edu/mac/ftpdir/scm/slib-3b6.tar.gz"
+            ;;
+        3b5)
+            echo "https://groups.csail.mit.edu/mac/ftpdir/scm/slib-3b5.tar.gz"
+            ;;
+        3b4)
+            echo "https://groups.csail.mit.edu/mac/ftpdir/scm/slib-3b4.tar.gz"
+            ;;
+        *)
+            echo ""
+            ;;
+    esac
+}
