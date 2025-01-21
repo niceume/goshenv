@@ -1,13 +1,17 @@
 #!/bin/env bash
 # -*- mode: sh;-*-
 
-echo "prepare-goshenv.sh is executed"
+# Setting
+
+GET_GAUCHE_URI=https://raw.githubusercontent.com/practical-scheme/get-gauche/refs/heads/master/get-gauche.sh
+GAUCHE_API=https://practical-scheme.net/gauche/releases
+GOSHENV_HOME="$HOME/.goshenv"
 
 # Arguments
 
 # (e.g.)
 # --version 0.9.15
-# --with-slib ~/lib/slib
+# --with-slib /home/foo/SLIB/lib/slib
 # --with-tls mbedtls-internal
 
 non_option_args=()
@@ -103,18 +107,6 @@ if ! [[ -z ${non_option_args[*]} ]]; then
     exit 1
 fi
 
-## Variables specified as command arguments
-
-if [[ -v GAUCHE_VERSION ]] ; then
-    echo "GAUCHE_VERSION: $GAUCHE_VERSION"
-fi
-if [[ -v WITH_SLIB ]] ; then
-    echo "WITH_SLIB: $WITH_SLIB"
-fi
-if [[ -v WITH_TLS ]] ; then
-    echo "WITH_TLS: $WITH_TLS"
-fi
-
 ## Default Values for variables
 
 if ! [[ -v GAUCHE_VERSION ]] || [[ $GAUCHE_VERSION = "" ]] ; then
@@ -129,16 +121,9 @@ if ! [[ -v WITH_TLS ]] || [[ $WITH_TLS = "" ]] ; then
     WITH_TLS="mbedtls-internal"
 fi
 
-# Setting
-
-GET_GAUCHE_URI=https://raw.githubusercontent.com/practical-scheme/get-gauche/refs/heads/master/get-gauche.sh
-GAUCHE_API=https://practical-scheme.net/gauche/releases
-GOSHENV_HOME="$HOME/.goshenv"
-
 ##### Start: File Insertion #####
 @GOSHENV_UTILITY@
 ##### END  : File Insertion #####
-
 
 # Command check
 
