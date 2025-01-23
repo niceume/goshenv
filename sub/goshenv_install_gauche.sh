@@ -313,9 +313,11 @@ if [[ -v SLIB_VERSION ]] ; then
         cd "$GOSHENV_HOME/temp/slib"
         mkdir -p "$GOSHENV_HOME/slib/$SLIB_VERSION"
         ./configure --prefix="$GOSHENV_HOME/slib/$SLIB_VERSION"
-        $MAKE infoz
+        if hash makeinfo; then
+            $MAKE install-infoz
+        fi
         touch -m clrnamdb.scm
-        $MAKE install
+        $MAKE install-lib
         cd "$current_dir"
     fi
 fi
