@@ -239,8 +239,9 @@ cd "$GOSHENV_HOME/temp"
 
 function trap_exit {
     echo "exit goshenv installation process"
-    if ! [[ "$GOSHENV_HOME" == "" ]] ; then
-        rm -R -f "$GOSHENV_HOME/temp/*"
+    if ! [[ "$GOSHENV_HOME" = "" ]] ; then
+        echo "$GOSHENV_HOME"/temp/*
+        rm -R -f "$GOSHENV_HOME"/temp/*
     fi
     echo "clean up .goshenv/temp directory"
 }
