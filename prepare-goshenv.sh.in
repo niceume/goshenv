@@ -1,6 +1,10 @@
 #!/bin/env bash
 # -*- mode: sh;-*-
 
+##### Start: File Insertion #####
+@GOSHENV_UTILITY@
+##### END  : File Insertion #####
+
 # Setting
 
 GET_GAUCHE_URI=https://raw.githubusercontent.com/practical-scheme/get-gauche/refs/heads/master/get-gauche.sh
@@ -120,10 +124,6 @@ fi
 if ! [[ -v WITH_TLS ]] || [[ $WITH_TLS = "" ]] ; then
     WITH_TLS="mbedtls-internal"
 fi
-
-##### Start: File Insertion #####
-@GOSHENV_UTILITY@
-##### END  : File Insertion #####
 
 # Command check
 
