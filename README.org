@@ -59,17 +59,36 @@ goshenv init ./release/goshenv-init.tgz
 
 ** Usage
 
+Goshenv instructions are as follows. 'goshenv <instruction> (optional
+arguments if accepted)' runs goshenv instructions.
+
+Install options for goshenv install are the same as install options in
+prepare-goshenv.sh script mentioned above.
+
 #+BEGIN_EXAMPLE
+Usage
+goshenv <instruction> (optional arguments if accepted)
+
+Instructions
 installed        : list installed versions
 installable      : list installable versions (snapshot/release)
 installable-edge : list installable edge versions
-install <version> <configure-args>
-                 : install <version>
+install <install-options>
+                 : install Gauche following <install-options>
 switch <version> : switch to use <version>
 remove <version> : remove <version>
 update-db        : update db info (installable version list)
 #+END_EXAMPLE
 
+Example
+
+#+BEGIN_SRC bash
+goshenv update-db
+
+goshenv installable
+
+goshenv install --version 0.9.15-p2 --with-slib 3c1
+#+END_SRC
 
 ** Uninstall
 

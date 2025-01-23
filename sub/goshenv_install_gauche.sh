@@ -152,12 +152,16 @@ fi
 
 # .goshenv directory
 
-create_dir_unless_exits "$GOSHENV_HOME"
-
-if [[ -f $GOSHENV_HOME/shims/bin/gosh ]] ; then
-    echo "goshenv seems to be already installed"
-    echo "If you need to reinstall goshenv, please remove ~/.goshenv directory first"
-    exit 1
+if [[ -v GOSHENV_ALREADY_INSTALLED ]] &&
+       [[ $GOSHENV_ALREADY_INSTALLED = "YES" ]]; then
+    : # GOSHENV is already installed
+else
+    create_dir_unless_exits "$GOSHENV_HOME"
+    if [[ -f $GOSHENV_HOME/shims/bin/gosh ]] ; then
+        echo "goshenv seems to be already installed"
+        echo "If you need to reinstall goshenv, please remove ~/.goshenv directory first"
+        exit 1
+    fi
 fi
 
 
@@ -207,17 +211,22 @@ else
 fi
 
 
-# download get-gauche.sh script
+# download or copy get-gauche.sh from script/sub directory
 
-echo "download get-gauche.sh"
-if ! curl -L -f --progress-bar -o "$GOSHENV_HOME/temp/get-gauche.sh" $GET_GAUCHE_URI; then
-    echo "get-gauche.sh download failed"
-    if [[ -f "$GOSHENV_HOME/temp/get-gauche.sh" ]]; then
-        rm -f "$GOSHENV_HOME/temp/get-gauche.sh"
-    fi
-    exit 1
-else
+if [[ -f $GOSHENV_HOME/script/sub/get-gauche.sh ]]; then
+    cp $GOSHENV_HOME/script/sub/get-gauche.sh $GOSHENV_HOME/temp/get-gauche.sh
     chmod 755 "$GOSHENV_HOME/temp/get-gauche.sh"
+else
+    echo "download get-gauche.sh"
+    if ! curl -L -f --progress-bar -o "$GOSHENV_HOME/temp/get-gauche.sh" $GET_GAUCHE_URI; then
+        echo "get-gauche.sh download failed"
+        if [[ -f "$GOSHENV_HOME/temp/get-gauche.sh" ]]; then
+            rm -f "$GOSHENV_HOME/temp/get-gauche.sh"
+        fi
+        exit 1
+    else
+        chmod 755 "$GOSHENV_HOME/temp/get-gauche.sh"
+    fi
 fi
 
 

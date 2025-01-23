@@ -12,7 +12,7 @@ case $1 in
         goshenv-installable-edge-verbose
         ;;
     install)
-        goshenv-install $2 "${@:3}"
+        goshenv-install "${@:2}"
         ;;
     switch)
         goshenv-switch $2
@@ -29,8 +29,8 @@ goshenv command help
 installed        : list installed versions
 installable      : list installable versions (snapshot/release)
 installable-edge : list installable edge versions
-install <version> <configure-args>
-                 : install <version>
+install <install-options>
+                 : install Gauche following <install-options>
 switch <version> : switch to use <version>
 remove <version> : remove <version>
 update-db        : update db info (installable version list)

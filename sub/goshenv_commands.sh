@@ -97,55 +97,17 @@ function goshenv-switch {
 }
 
 function goshenv-install {
-    version=$1
-    configure_args=${@:2}
+    GOSHENV_ALREADY_INSTALLED="YES"
+    source "$GOSHENV_HOME/script/sub/goshenv_install_gauche.sh"
 
-    if goshenv-installable | grep -x $version || \
-            goshenv-installable-edge | grep -x $version ;
-    then
-        # the version is in installable list
-        if [[ -d "$GOSHENV_HOME/gauche/$version" ]] ; then
-            # the version is already installed
-            echo "The version ($version) is already installed"
-            exit 1
-        else
-            # the version is not installed yet
-            :
-        fi
-    else
-        # the version is not installable
-        echo "The version ($version) is not in the installable list"
-        echo "The version is not released yet or if it is released"
-        echo "but is not listed in the local installable list,"
-        echo "please update db by 'goshenv update-db' and try again"
-        exit 1
-    fi
-
-    mkdir -p "$GOSHENV_HOME/temp"
-    mkdir -p "$GOSHENV_HOME/gauche/$version"
-
-    if [[ "$configure_args" =~ "--with-tls" ]]
-    then
-        : # the configure option already includes --with-tls option.
-    else
-        echo "--with-tls=mbedtls-internal is added to confiture argument"
-        configure_args="--with-tls=mbedtls-internal $configure_args"
-    fi
-
-    $GOSHENV_HOME/script/sub/get-gauche.sh \
-        --version $version \
-        --prefix "$GOSHENV_HOME/gauche/$version" \
-        --configure-args "$configure_args" \
-        --force \
-        --auto
-
-    if ! [[ -f "$GOSHENV_HOME/gauche/$version/bin/gosh" ]] ; then
+    if ! [[ -f "$GOSHENV_HOME/gauche/$GAUCHE_VERSION/bin/gosh" ]] ; then
         # When installation failed
-        echo "Error: get-gauche failed"
-        rm -f -R "$GOSHENV_HOME/gauche/$version"
+        rm -R -f "$GOSHENV_HOME/gauche/$GAUCHE_VERSION/"
+        echo "Gauche $GAUCHE_VERSION installation fails"
+        echo "Please make sure installation arguments are valid"
         exit 1
     else
-        goshenv-switch $version
+        goshenv-switch $GAUCHE_VERSION
     fi
 }
 

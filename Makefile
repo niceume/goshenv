@@ -1,6 +1,7 @@
 RM = rm -f -R
 
-SCRIPTS = sub/goshenv_commands.sh sub/goshenv_main.sh sub/goshenv_utility.sh
+SCRIPTS = sub/goshenv_commands.sh sub/goshenv_main.sh sub/goshenv_utility.sh \
+sub/goshenv_install_gauche.sh
 
 .PHONY : all build distclean
 
