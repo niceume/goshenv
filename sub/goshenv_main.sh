@@ -29,6 +29,7 @@ goshenv command help
 installed        : list installed versions
 installable      : list installable versions (snapshot/release)
 installable-edge : list installable edge versions
+install <version> <install-options>
 install <install-options>
                  : install Gauche following <install-options>
 switch <version> : switch to use <version>

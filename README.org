@@ -63,7 +63,8 @@ Goshenv instructions are as follows. 'goshenv <instruction> (optional
 arguments if accepted)' runs goshenv instructions.
 
 Install options for goshenv install are the same as install options in
-prepare-goshenv.sh script mentioned above.
+prepare-goshenv.sh script mentioned above. Gauche version can be
+specifed without option flags followed by intasll options.
 
 #+BEGIN_EXAMPLE
 Usage
@@ -73,6 +74,7 @@ Instructions
 installed        : list installed versions
 installable      : list installable versions (snapshot/release)
 installable-edge : list installable edge versions
+install <version> <install-options>
 install <install-options>
                  : install Gauche following <install-options>
 switch <version> : switch to use <version>
@@ -87,7 +89,7 @@ goshenv update-db
 
 goshenv installable
 
-goshenv install --version 0.9.15-p2 --with-slib 3c1
+goshenv install 0.9.15-p2 --with-slib 3c1
 #+END_SRC
 
 ** Uninstall

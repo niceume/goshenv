@@ -99,9 +99,19 @@ while ! [[ $OPTIND -gt $# ]]; do
 done
 
 if ! [[ -z ${non_option_args[*]} ]]; then
-    echo "non used arguments found: ${non_option_args[*]}"
-    echo "please check arguments and try installation again"
-    exit 1
+    if [[ ${#non_option_args[@]} -eq 1 ]] && ! [[ $1 =~ ^- ]]; then
+        # When the first argument is non optional argument
+        if ! [[ -v GAUCHE_VERSION ]]; then
+            GAUCHE_VERSION=$1
+        else
+            echo "Gauche version specification is duplicated"
+            exit 1
+        fi
+    else
+        echo "non used arguments found: ${non_option_args[*]}"
+        echo "please check arguments and try installation again"
+        exit 1
+    fi
 fi
 
 ## Default Values for variables
