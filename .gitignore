@@ -1,6 +1,7 @@
 *.cache
 *.log
 *.status
+*~
 /configure
 /sub/get-gauche.sh
 /release/*.tgz
