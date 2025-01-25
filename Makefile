@@ -11,7 +11,7 @@ goshenv-init : release/goshenv-init.tgz
 
 prepare-goshenv : release/prepare-goshenv.sh
 
-release/prepare-goshenv.sh : prepare-goshenv.sh.in configure
+release/prepare-goshenv.sh : prepare-goshenv.sh.in configure $(SCRIPTS)
 	bash ./configure
 	mv prepare-goshenv.sh release/prepare-goshenv.sh
 
