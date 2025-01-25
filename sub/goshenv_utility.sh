@@ -53,11 +53,11 @@ function goshenv_make_shims_from {
 }
 
 function goshenv_filter_edge_versions {
-    egrep [p0-9.\-]+\\+[0-9]+
+    grep -E [p0-9.\-]+\\+[0-9]+
 }
 
 function goshenv_filter_non_edge_versions {
-    egrep -v [p0-9.\-]+\\+[0-9]+
+    grep -E -v [p0-9.\-]+\\+[0-9]+
 }
 
 function get_slib_latest {

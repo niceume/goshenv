@@ -32,7 +32,7 @@ function goshenv-installable-verbose {
     do
         if [[ $version = $current_use ]] ; then
             echo "$version (*)"
-        elif echo $version | egrep -x $installed_pattern ; then
+        elif echo $version | grep -E -x $installed_pattern ; then
             echo "$version (#)"
         else
             echo $version
@@ -54,7 +54,7 @@ function goshenv-installable-edge-verbose {
     do
         if [[ $version = $current_use ]] ; then
             echo "$version (*)"
-        elif echo $version | egrep -x $installed_pattern ; then
+        elif echo $version | grep -E -x $installed_pattern ; then
             echo "$version (#)"
         else
             echo $version
