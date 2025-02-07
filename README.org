@@ -11,6 +11,22 @@ get-gauche.sh script to install Gauche.
 
 ** Installation
 
+The following commands install goshenv using artifacts built on Github.
+
+#+BEGIN_SRC bash
+# Run prepare-goshenv.sh
+curl -L https://github.com/niceume/goshenv/releases/latest/download/prepare-goshenv.sh -o prepare-goshenv.sh
+bash ./prepare-goshenv.sh
+
+# update PATH variable
+source ~/.bashrc
+
+# makes goshenv management commands available
+goshenv init https://github.com/niceume/goshenv/releases/latest/download/goshenv-init.tgz
+#+END_SRC
+
+*** Installation details
+
 prepare-goshenv.sh script creates ~/.goshenv and installs a specfied
 or the latest version of Gauche under ~/.goshenv/gauche directory. It
 also adds PATH environment variable setting for links under
@@ -38,6 +54,13 @@ options.
 
 'goshenv init' executed with the location of goshenv-init.tgz
 make goshenv management commands available.
+
+
+*** Another way for installation
+
+The following installation uses artifacts generated locally. After
+downloading goshenv source, you can run the following commnads in the
+source directory to install goshenv.
 
 #+BEGIN_SRC bash
 # generates prepare-goshenv.sh & goshenv-init.tgz

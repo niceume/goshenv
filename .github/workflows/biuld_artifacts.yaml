@@ -1,0 +1,25 @@
+name: Configure & Make
+
+on:
+  push:
+    tags:     # Pattern matched against refs/tags
+      - '*.*.*'   # Push events to every tag that contains x.y.z without /
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Generate configure script, run and make
+      run: make
+
+    - uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          release/goshenv-init.tgz
+          release/prepare-goshenv.sh
+        make_latest: true
+        token: ${{ secrets.GOSHENV_ACCESS_TOKEN }}
