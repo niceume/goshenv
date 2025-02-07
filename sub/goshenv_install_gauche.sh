@@ -133,6 +133,7 @@ fi
 ensure_command curl
 if ! echo $(uname) | grep -i "bsd" ; then
     ensure_command gmake
+    ensure_command bash
 fi
 
 if hash gmake; then
@@ -325,9 +326,18 @@ fi
 # get-gauche.sh
 
 mkdir -p "$GOSHENV_HOME/gauche/$GAUCHE_VERSION"
-./get-gauche.sh --prefix "$GOSHENV_HOME/gauche/$GAUCHE_VERSION" \
-                --version $GAUCHE_VERSION \
-                --configure-args "$GAUCHE_CONFIGURE_ARGS" \
-                --force \
-                --auto \
-                $GET_GAUCHE_ADDITIONAL_OPTIONS
+if [[ -f /bin/bash ]]; then
+    ./get-gauche.sh --prefix "$GOSHENV_HOME/gauche/$GAUCHE_VERSION" \
+                    --version $GAUCHE_VERSION \
+                    --configure-args "$GAUCHE_CONFIGURE_ARGS" \
+                    --force \
+                    --auto \
+                    $GET_GAUCHE_ADDITIONAL_OPTIONS
+else
+    bash ./get-gauche.sh --prefix "$GOSHENV_HOME/gauche/$GAUCHE_VERSION" \
+         --version $GAUCHE_VERSION \
+         --configure-args "$GAUCHE_CONFIGURE_ARGS" \
+         --force \
+         --auto \
+         $GET_GAUCHE_ADDITIONAL_OPTIONS
+fi
