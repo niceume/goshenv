@@ -226,17 +226,17 @@ fi
 
 if [[ -f $GOSHENV_HOME/script/sub/get-gauche.sh ]]; then
     cp $GOSHENV_HOME/script/sub/get-gauche.sh $GOSHENV_HOME/temp/get-gauche.sh
-    chmod 755 "$GOSHENV_HOME/temp/get-gauche.sh"
 else
     echo "download get-gauche.sh"
-    if ! curl -L -f --progress-bar -o "$GOSHENV_HOME/temp/get-gauche.sh" $GET_GAUCHE_URI; then
+    if ! curl -L -f --progress-bar \
+         -o "$GOSHENV_HOME/script/sub/get-gauche.sh" $GET_GAUCHE_URI; then
         echo "get-gauche.sh download failed"
-        if [[ -f "$GOSHENV_HOME/temp/get-gauche.sh" ]]; then
-            rm -f "$GOSHENV_HOME/temp/get-gauche.sh"
+        if [[ -f "$GOSHENV_HOME/script/sub/get-gauche.sh" ]]; then
+            rm -f "$GOSHENV_HOME/script/sub/get-gauche.sh"
         fi
         exit 1
     else
-        chmod 755 "$GOSHENV_HOME/temp/get-gauche.sh"
+        cp $GOSHENV_HOME/script/sub/get-gauche.sh $GOSHENV_HOME/temp/get-gauche.sh
     fi
 fi
 
@@ -324,6 +324,17 @@ if [[ -v SLIB_VERSION ]] ; then
 fi
 
 # get-gauche.sh
+
+if echo $(uname) | grep -i "bsd" ; then
+    # On BSD system and GAUCHE_VERSION <= 0.9.15, $MAKE -j fails. 
+    if [[ $GAUCHE_VERSION =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)* ]]; then
+        if [[ ${BASH_REMATCH[1]} -eq 0 ]] && \
+               [[ ${BASH_REMATCH[2]} -le 9 ]] && \
+               [[ ${BASH_REMATCH[3]} -le 15 ]] ; then
+            sed -i '' 's/$MAKE -j/$MAKE/' $GOSHENV_HOME/temp/get-gauche.sh # BSD sed
+        fi
+    fi
+fi
 
 mkdir -p "$GOSHENV_HOME/gauche/$GAUCHE_VERSION"
 if [[ -f /bin/bash ]]; then
