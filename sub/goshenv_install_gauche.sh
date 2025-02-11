@@ -334,6 +334,17 @@ if echo $(uname) | grep -i "bsd" ; then
             sed -i '' 's/$MAKE -j/$MAKE/' $GOSHENV_HOME/temp/get-gauche.sh # BSD sed
         fi
     fi
+ 
+    # On BSD system and GAUCHE_VERSION <= 0.9.15, file.* test fails. Use --skip-tets.
+    if [[ $GAUCHE_VERSION =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)* ]]; then
+        if [[ ${BASH_REMATCH[1]} -eq 0 ]] && \
+               [[ ${BASH_REMATCH[2]} -le 9 ]] && \
+               [[ ${BASH_REMATCH[3]} -le 15 ]] ; then
+            if ! [[ -v SKIP_TESTS ]]; then
+                GET_GAUCHE_ADDITIONAL_OPTIONS="$GET_GAUCHE_ADDITIONAL_OPTIONS --skip-tests"
+            fi
+        fi
+    fi
 fi
 
 mkdir -p "$GOSHENV_HOME/gauche/$GAUCHE_VERSION"
