@@ -349,6 +349,7 @@ fi
 
 mkdir -p "$GOSHENV_HOME/gauche/$GAUCHE_VERSION"
 if [[ -f /bin/bash ]]; then
+    chmod +x ./get-gauche.sh
     ./get-gauche.sh --prefix "$GOSHENV_HOME/gauche/$GAUCHE_VERSION" \
                     --version $GAUCHE_VERSION \
                     --configure-args "$GAUCHE_CONFIGURE_ARGS" \
