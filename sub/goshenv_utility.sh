@@ -86,3 +86,30 @@ function get_slib_uri {
             ;;
     esac
 }
+
+function get_gdbm_latest {
+    echo "1.24"
+}
+
+function get_gdbm_uri {
+    case $1 in
+        1.24)
+            echo "https://ftp.gnu.org/gnu/gdbm/gdbm-1.24.tar.gz"
+            ;;
+        1.23)
+            echo "https://ftp.gnu.org/gnu/gdbm/gdbm-1.23.tar.gz"
+            ;;
+        1.22)
+            echo "https://ftp.gnu.org/gnu/gdbm/gdbm-1.22.tar.gz"
+            ;;
+        1.21)
+            echo "https://ftp.gnu.org/gnu/gdbm/gdbm-1.21.tar.gz"
+            ;;
+        1.20)
+            echo "https://ftp.gnu.org/gnu/gdbm/gdbm-1.20.tar.gz"
+            ;;
+        *)
+            echo ""
+            ;;
+    esac
+}

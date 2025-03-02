@@ -47,6 +47,12 @@ options.
     - slib version can also be specified
       - latest version and available slib versions are hardcoded.
     - path should be specified by an absolute path beginning with /
+- --with-gdbm
+  - default: latest
+  - latest, system or gdbm version can be specified.
+    - latest installs the latest version of gdbm.
+    - system does not install gdbm.
+    - gdbm version can specifies version of of gdbm to install
 - --skip-tests
   - skip tests when installing Gauche
 - --allow-skip-info

@@ -13,8 +13,8 @@ GOSHENV_HOME="$HOME/.goshenv"
 
 non_option_args=()
 while ! [[ $OPTIND -gt $# ]]; do
-    optstring=":v:s:t:-:"
-    long_options=(version: with-slib: with-tls: skip-tests allow-skip-info)
+    optstring=":v:s:t:g:-:"
+    long_options=(version: with-slib: with-tls: with-gdbm: skip-tests allow-skip-info)
     while getopts $optstring  option; do
 
         # START logic to deal with long options
@@ -75,6 +75,14 @@ while ! [[ $OPTIND -gt $# ]]; do
                     exit 1
                 fi
                 ;;
+            g|with-gdbm)
+                if ! [[ ${OPTARG} = "" ]] ; then
+                    WITH_GDBM=$OPTARG
+                else
+                    echo "-g|--with-gdbm option requires value"
+                    exit 1
+                fi
+                ;;
             skip-tests)
                 SKIP_TESTS="YES"
                 ;;
@@ -126,6 +134,10 @@ fi
 
 if ! [[ -v WITH_TLS ]] || [[ $WITH_TLS = "" ]] ; then
     WITH_TLS="mbedtls-internal"
+fi
+
+if ! [[ -v WITH_GDBM ]] || [[ $WITH_GDBM = "" ]] ; then
+    WITH_GDBM="latest"
 fi
 
 # Command check
@@ -181,6 +193,7 @@ fi
 mkdir -p "$GOSHENV_HOME/temp"
 mkdir -p "$GOSHENV_HOME/gauche"
 mkdir -p "$GOSHENV_HOME/slib"
+mkdir -p "$GOSHENV_HOME/gdbm"
 mkdir -p "$GOSHENV_HOME/script/sub"
 mkdir -p "$GOSHENV_HOME/shims"
 mkdir -p "$GOSHENV_HOME/db"
@@ -217,6 +230,35 @@ else
         WITH_SLIB="$GOSHENV_HOME/slib/$SLIB_VERSION/lib/slib/"
     else
         echo "unknown slib or relative path is specified: $WITH_SLIB"
+        exit 1
+    fi
+fi
+
+
+# download gdbm if required
+
+if [[ $WITH_GDBM = "system" ]] ; then
+    echo "system gdbm is used if available"
+else
+    if [[ $WITH_GDBM = "latest" ]] ; then
+        WITH_GDBM=$(get_gdbm_latest)
+    fi
+    if ! [[ $(get_gdbm_uri $WITH_GDBM) == "" ]] ; then
+        GDBM_VERSION=$WITH_GDBM
+        if [[ -f "$GOSHENV_HOME/gdbm/$GDBM_VERSION/lib/libgdbm.so" ]] && \
+               [[ -f "$GOSHENV_HOME/gdbm/$GDBM_VERSION/include/gdbm.h" ]]; then
+            echo "gdbm $GDBM_VERSION found"
+        else
+            GDBM_URI=$(get_gdbm_uri $GDBM_VERSION)
+            echo "download gdbm $GDBM_VERSION"
+            if ! curl -f -L --progress-bar \
+                 -o "$GOSHENV_HOME/temp/gdbm-${GDBM_VERSION}.tar.gz" $GDBM_URI ; then
+                echo "gdbm download failed"
+                exit 1
+            fi
+        fi
+    else
+        echo "unknown gdbm is specified: $WITH_GDBM"
         exit 1
     fi
 fi
@@ -291,6 +333,9 @@ echo "-----------------------------------------------------"
 echo "Gauche is to be installed with the following settings"
 echo "version: $GAUCHE_VERSION"
 echo "configure-args: $GAUCHE_CONFIGURE_ARGS"
+if [[ -v GDBM_VERSION ]]; then
+    echo "GDBM: $GDBM_VERSION"
+fi
 if [[ $SKIP_TESTS = "YES" ]]; then
     echo "tests: skipped"
 fi
@@ -321,6 +366,32 @@ if [[ -v SLIB_VERSION ]] ; then
         $MAKE install-lib
         cd "$current_dir"
     fi
+fi
+
+# install gdbm if required
+
+if [[ -v GDBM_VERSION ]] ; then
+    if [[ -f "$GOSHENV_HOME/gdbm/$GDBM_VERSION/lib/libgdbm.so" ]] && \
+           [[ -f "$GOSHENV_HOME/gdbm/$GDBM_VERSION/include/gdbm.h" ]]; then
+        echo "gdbm $GDBM_VERSION is found"
+    else
+        mkdir "$GOSHENV_HOME/temp/gdbm"
+        tar zxf "$GOSHENV_HOME/temp/gdbm-${GDBM_VERSION}.tar.gz" \
+            -C "$GOSHENV_HOME/temp/gdbm" --strip-components=1
+        current_dir=$(pwd)
+        cd "$GOSHENV_HOME/temp/gdbm"
+        rm -R -f "$GOSHENV_HOME/gdbm/$GDBM_VERSION"
+        mkdir -p "$GOSHENV_HOME/gdbm/$GDBM_VERSION"
+        if ! [[ -f "./congigure" ]]; then
+            autoconf
+        fi
+        ./configure --prefix="$GOSHENV_HOME/gdbm/$GDBM_VERSION"
+        $MAKE
+        $MAKE install
+        cd "$current_dir"
+    fi
+    CPPFLAGS="-I${GOSHENV_HOME}/gdbm/${GDBM_VERSION}/include ${CPPFLAGS}"
+    LDFLAGS="-L${GOSHENV_HOME}/gdbm/${GDBM_VERSION}/lib ${LDFLAGS}"
 fi
 
 # get-gauche.sh
