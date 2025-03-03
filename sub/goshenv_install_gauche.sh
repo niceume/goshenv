@@ -390,8 +390,8 @@ if [[ -v GDBM_VERSION ]] ; then
         $MAKE install
         cd "$current_dir"
     fi
-    CPPFLAGS="-I${GOSHENV_HOME}/gdbm/${GDBM_VERSION}/include ${CPPFLAGS}"
-    LDFLAGS="-L${GOSHENV_HOME}/gdbm/${GDBM_VERSION}/lib ${LDFLAGS}"
+    GDBM_CPPFLAGS="-I${GOSHENV_HOME}/gdbm/${GDBM_VERSION}/include ${CPPFLAGS}"
+    GDBM_LDFLAGS="-L${GOSHENV_HOME}/gdbm/${GDBM_VERSION}/lib ${LDFLAGS}"
 fi
 
 # get-gauche.sh
@@ -416,6 +416,17 @@ if echo $(uname) | grep -i "bsd" ; then
             fi
         fi
     fi
+fi
+
+GDBM_FLAGS=""
+if [[ -v GDBM_CPPFLAGS ]]; then
+    GDBM_FLAGS="CPPFLAGS=${GDBM_CPPFLAGS}"
+fi
+if [[ -v GDBM_LDFLAGS ]]; then
+    GDBM_FLAGS="${GDBM_FLAGS} LDFLAGS=${GDBM_LDFLAGS}"
+fi
+if [[ -v GDBM_CPPFLAGS ]] || [[ -v GDBM_LDFLAGS ]]; then
+    sed -i "s@./configure@${GDBM_FLAGS} ./configure@" $GOSHENV_HOME/temp/get-gauche.sh
 fi
 
 mkdir -p "$GOSHENV_HOME/gauche/$GAUCHE_VERSION"
