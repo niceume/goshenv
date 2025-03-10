@@ -53,8 +53,8 @@ options.
     - latest installs the latest version of gdbm.
     - system does not install gdbm.
     - gdbm version can specifies version of of gdbm to install
-- --skip-tests
-  - skip tests when installing Gauche
+- --run-tests
+  - run tests when installing Gauche (default: tests are skipped)
 - --allow-skip-info
   - allow to skip to create info files when installing Gauche
 

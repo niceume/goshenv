@@ -14,7 +14,7 @@ GOSHENV_HOME="$HOME/.goshenv"
 non_option_args=()
 while ! [[ $OPTIND -gt $# ]]; do
     optstring=":v:s:t:g:-:"
-    long_options=(version: with-slib: with-tls: with-gdbm: skip-tests allow-skip-info)
+    long_options=(version: with-slib: with-tls: with-gdbm: run-tests allow-skip-info)
     while getopts $optstring  option; do
 
         # START logic to deal with long options
@@ -83,8 +83,8 @@ while ! [[ $OPTIND -gt $# ]]; do
                     exit 1
                 fi
                 ;;
-            skip-tests)
-                SKIP_TESTS="YES"
+            run-tests)
+                RUN_TESTS="YES"
                 ;;
             allow-skip-info)
                 ALLOW_SKIP_INFO="YES"
@@ -138,6 +138,10 @@ fi
 
 if ! [[ -v WITH_GDBM ]] || [[ $WITH_GDBM = "" ]] ; then
     WITH_GDBM="latest"
+fi
+
+if ! [[ -v RUN_TESTS ]] ; then
+    RUN_TESTS="NO"
 fi
 
 # Command check
@@ -320,7 +324,7 @@ if [[ -v WITH_TLS ]] && ! [[ $WITH_TLS = "" ]]; then
 fi
 
 GET_GAUCHE_ADDITIONAL_OPTIONS=""
-if [[ $SKIP_TESTS = "YES" ]]; then
+if ! [[ $RUN_TESTS = "YES" ]]; then
     GET_GAUCHE_ADDITIONAL_OPTIONS="$GET_GAUCHE_ADDITIONAL_OPTIONS --skip-tests"
 fi
 
@@ -346,8 +350,10 @@ if [[ -v GDBM_VERSION ]]; then
         fi
     fi
 fi
-if [[ $SKIP_TESTS = "YES" ]]; then
+if ! [[ $RUN_TESTS = "YES" ]]; then
     echo "tests: skipped"
+else
+    echo "tests: run"
 fi
 if [[ $ALLLOW_SKIP_INFO = "YES" ]] && ! hash makeinfo; then
     echo "info files: not generated"
@@ -413,17 +419,6 @@ if echo $(uname) | grep -i "bsd" ; then
                [[ ${BASH_REMATCH[2]} -le 9 ]] && \
                [[ ${BASH_REMATCH[3]} -le 15 ]] ; then
             sed -i '' 's/$MAKE -j/$MAKE/' $GOSHENV_HOME/temp/get-gauche.sh # BSD sed
-        fi
-    fi
- 
-    # On BSD system and GAUCHE_VERSION <= 0.9.15, file.* test fails. Use --skip-tets.
-    if [[ $GAUCHE_VERSION =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)* ]]; then
-        if [[ ${BASH_REMATCH[1]} -eq 0 ]] && \
-               [[ ${BASH_REMATCH[2]} -le 9 ]] && \
-               [[ ${BASH_REMATCH[3]} -le 15 ]] ; then
-            if ! [[ -v SKIP_TESTS ]]; then
-                GET_GAUCHE_ADDITIONAL_OPTIONS="$GET_GAUCHE_ADDITIONAL_OPTIONS --skip-tests"
-            fi
         fi
     fi
 fi
