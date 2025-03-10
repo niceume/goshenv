@@ -334,7 +334,17 @@ echo "Gauche is to be installed with the following settings"
 echo "version: $GAUCHE_VERSION"
 echo "configure-args: $GAUCHE_CONFIGURE_ARGS"
 if [[ -v GDBM_VERSION ]]; then
-    echo "GDBM: $GDBM_VERSION"
+    if [[ $GAUCHE_VERSION =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)* ]]; then
+        if [[ ${BASH_REMATCH[1]} -eq 0 ]] && \
+               [[ ${BASH_REMATCH[2]} -le 9 ]] && \
+               [[ ${BASH_REMATCH[3]} -le 15 ]] ; then
+            echo "GDBM: (Caution) Using locally installed GDBM may not be configured properly for"
+            echo "      Gauche version of 0.9.15 or less. It is recommended to have system wide"
+            echo "      GDBM library and to configure installation with '--with-gdbm system' option."
+        else
+            echo "GDBM: $GDBM_VERSION"
+        fi
+    fi
 fi
 if [[ $SKIP_TESTS = "YES" ]]; then
     echo "tests: skipped"
