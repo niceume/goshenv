@@ -129,6 +129,23 @@ lines related to PATH environment variable setting to Gauche links in
 ~/.bashrc file.
 
 
+** FAQ
+
+*** 'goshenv installable' does not show all the released versions
+
+goshenv refers to the internal database of Gauche release and snapshot
+versions, which is first stored when goshenv is installed. After that,
+the database needs to be manually updated by "goshenv update-db".
+
+*** How to reinstall some specific version of Gauche
+
+goshenv does not have functionality of reinstallation. To reinstall
+the version, it is needed to remove the version first and to install
+the version again. If there is only one version installed, it cannot
+be removed because currently used version cannot be uninstalled. In
+this case, another version of Gauche also needs to be installed.
+
+
 ** Contact
 
 Your feedback is welcome.
