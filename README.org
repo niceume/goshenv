@@ -33,13 +33,13 @@ also adds PATH environment variable setting for links under
 ~/.goshenv/shims to ~/.bashrc file. This script accepts the following
 options.
 
-- --version
+- =--version=
   - default: latest
   - available versions are listed at [[https://practical-scheme.net/gauche/releases/][Gauche Releases]]
-- --with-tls
+- =--with-tls=
   - default: mbedtls-internal
   - none/mebedtls/mbedtls-internal
-- --with-slib
+- =--with-slib=
   - default: latest
   - none, latest, slib version or an absolute path to slib directory
     - none skips slib installation
@@ -47,15 +47,15 @@ options.
     - slib version can also be specified
       - latest version and available slib versions are hardcoded.
     - path should be specified by an absolute path beginning with /
-- --with-gdbm
+- =--with-gdbm=
   - default: latest
   - latest, system or gdbm version can be specified.
     - latest installs the latest version of gdbm.
     - system does not install gdbm.
     - gdbm version can specifies version of of gdbm to install
-- --run-tests
+- =--run-tests=
   - run tests when installing Gauche (default: tests are skipped)
-- --allow-skip-info
+- =--allow-skip-info=
   - allow to skip to create info files when installing Gauche
 
 'goshenv init' executed with the location of goshenv-init.tgz
